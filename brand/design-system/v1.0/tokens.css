@@ -1,0 +1,122 @@
+/*
+ * SLSFC Digital Design System v1.0 — CSS custom properties.
+ * Generated from tokens.json (same folder). Do not edit by hand:
+ * change the hosted design system, re-sync tokens.json, regenerate.
+ * Source: https://claude.ai/artifact/XJgvEM7VTUzrAbjbswy9fK (version 1790961796-c84a)
+ *
+ * Naming: every token is prefixed --slsfc- to avoid collisions with
+ * WordPress/Elementor variables (for example tokens.json `navy` is
+ * --slsfc-navy). Light (Away) is the default; apply data-theme="dark"
+ * on an ancestor for Dark (Home).
+ *
+ * Fonts are not loaded here. Load Barlow 400/500/600/700 and
+ * Barlow Condensed 600/700/800 + italic 700/800 from Google Fonts.
+ */
+
+:root,
+[data-theme="light"] {
+  --slsfc-navy: #042644;
+  --slsfc-navy-deep: #021a30;
+  --slsfc-orange: #fc4b08;
+  --slsfc-orange-deep: #c93008;
+  --slsfc-crest-white: #f8f8f9;
+  --slsfc-white: #ffffff;
+  --slsfc-slate: #a7b0b8;
+  --slsfc-paper: #f3f4f3;
+  --slsfc-surface: var(--slsfc-white);
+  --slsfc-surface-alt: var(--slsfc-paper);
+  --slsfc-surface-raised: var(--slsfc-white);
+  --slsfc-band: var(--slsfc-navy);
+  --slsfc-on-band: var(--slsfc-white);
+  --slsfc-on-band-muted: var(--slsfc-slate);
+  --slsfc-line: #dde2e7;
+  --slsfc-line-strong: #77838f;
+  --slsfc-ink: var(--slsfc-navy);
+  --slsfc-ink-muted: #4f5d6b;
+  --slsfc-accent: var(--slsfc-orange);
+  --slsfc-accent-text: var(--slsfc-orange-deep);
+  --slsfc-accent-soft: #fff0e8;
+  --slsfc-action: var(--slsfc-orange);
+  --slsfc-action-hover: #ff6a2e;
+  --slsfc-on-action: var(--slsfc-navy-deep);
+  --slsfc-focus-ring: var(--slsfc-orange);
+  --slsfc-success: #17784a;
+  --slsfc-success-soft: #e8f3ec;
+  --slsfc-caution: #8a5a00;
+  --slsfc-caution-soft: #fff4d6;
+  --slsfc-danger: #b4183c;
+  --slsfc-danger-soft: #fce8ec;
+  --slsfc-shadow-sm: 0 1px 2px rgba(4, 38, 68, 0.10);
+  --slsfc-shadow-md: 0 8px 24px rgba(4, 38, 68, 0.14);
+}
+
+[data-theme="dark"] {
+  --slsfc-surface: var(--slsfc-navy);
+  --slsfc-surface-alt: #0a2e50;
+  --slsfc-surface-raised: #0e355c;
+  --slsfc-band: var(--slsfc-navy-deep);
+  --slsfc-line: #22466b;
+  --slsfc-line-strong: #6f8ca8;
+  --slsfc-ink: var(--slsfc-white);
+  --slsfc-ink-muted: var(--slsfc-slate);
+  --slsfc-accent-text: #ff8a50;
+  --slsfc-accent-soft: #4a1e10;
+  --slsfc-success: #5fd39a;
+  --slsfc-success-soft: #123f2e;
+  --slsfc-caution: #f2c14e;
+  --slsfc-caution-soft: #3d300c;
+  --slsfc-danger: #ff8597;
+  --slsfc-danger-soft: #5a1a2a;
+  --slsfc-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --slsfc-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.50);
+}
+
+:root {
+  /* Type families */
+  --slsfc-font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --slsfc-font-sans: "Barlow", "Helvetica Neue", Arial, sans-serif;
+
+  /* Spacing */
+  --slsfc-space-1: 4px;
+  --slsfc-space-2: 8px;
+  --slsfc-space-3: 12px;
+  --slsfc-space-4: 16px;
+  --slsfc-space-6: 24px;
+  --slsfc-space-8: 32px;
+  --slsfc-space-12: 48px;
+  --slsfc-space-16: 64px;
+  --slsfc-space-24: 96px;
+
+  /* Radius */
+  --slsfc-radius-none: 0px;
+  --slsfc-radius-sm: 2px;
+  --slsfc-radius-md: 4px;
+
+  /* Sizes */
+  --slsfc-accent-bar-width: 40px;
+  --slsfc-accent-bar-height: 4px;
+  --slsfc-trim-stripe: 4px;
+  --slsfc-crest-min: 32px;
+  --slsfc-control-height: 44px;
+  --slsfc-container-max: 1200px;
+}
+
+/* Type styles. Display and heading styles are set uppercase per the guidelines. */
+.slsfc-display-xl { font-family: var(--slsfc-font-display); font-size: 80px; line-height: 0.92; font-weight: 800; font-style: italic; letter-spacing: -0.01em; text-transform: uppercase; }
+.slsfc-display-lg { font-family: var(--slsfc-font-display); font-size: 56px; line-height: 0.95; font-weight: 800; font-style: italic; letter-spacing: -0.005em; text-transform: uppercase; }
+.slsfc-heading-1 { font-family: var(--slsfc-font-display); font-size: 40px; line-height: 44px; font-weight: 700; letter-spacing: 0.01em; text-transform: uppercase; }
+.slsfc-heading-2 { font-family: var(--slsfc-font-display); font-size: 30px; line-height: 34px; font-weight: 700; letter-spacing: 0.01em; text-transform: uppercase; }
+.slsfc-heading-3 { font-family: var(--slsfc-font-display); font-size: 22px; line-height: 26px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; }
+.slsfc-score { font-family: var(--slsfc-font-display); font-size: 48px; line-height: 1; font-weight: 700; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.slsfc-body-lg { font-family: var(--slsfc-font-sans); font-size: 19px; line-height: 30px; font-weight: 400; }
+.slsfc-body { font-family: var(--slsfc-font-sans); font-size: 16px; line-height: 26px; font-weight: 400; }
+.slsfc-body-sm { font-family: var(--slsfc-font-sans); font-size: 14px; line-height: 22px; font-weight: 400; }
+.slsfc-label { font-family: var(--slsfc-font-sans); font-size: 13px; line-height: 16px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
+.slsfc-eyebrow { font-family: var(--slsfc-font-sans); font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; }
+
+/* Responsive display steps (guidelines: under 640px drop one step). */
+@media (max-width: 639px) {
+  .slsfc-display-xl { font-size: 56px; }
+  .slsfc-display-lg { font-size: 40px; }
+  .slsfc-heading-1 { font-size: 32px; }
+}

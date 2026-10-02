@@ -8,17 +8,49 @@ Source-controlled workspace for **slsfc.org**, the website of the St. Louis
 Squirrel Football Club (SLSFC).
 
 - **CMS/runtime:** WordPress + Elementor, hosted on SiteGround.
-- **Canonical source:** this GitHub repository is the canonical source for
-  SLSFC-controlled code, brand assets, documentation, source copy, and
-  exported reusable WordPress/Elementor assets. It is **not** authoritative
-  over all WordPress runtime state. Content, settings, media, users, and
-  plugin data in WordPress may exist only there. Do not assume the repo
-  reflects the live site, and do not overwrite WordPress state to match the
-  repo without approval.
+- **Sources of truth:**
+  - **Visual design:** the hosted SLSFC Digital Design System is
+    authoritative for digital visual-design decisions (see
+    [Design system authority](#design-system-authority)).
+  - **This repository** is canonical for SLSFC-controlled website
+    implementation, version-controlled design-system release snapshots,
+    approved production assets stored here, source copy, documentation,
+    tooling, and exported reusable WordPress/Elementor assets.
+  - `brand/design-system/v1.0/` is a frozen implementation snapshot of the
+    approved hosted release, not an independent design authority.
+    `brand/logos/` holds approved production assets that implementation may
+    consume.
+  - **WordPress runtime state** is not generally canonical to the repo.
+    Content, settings, media, users, and plugin data in WordPress may exist
+    only there. Do not assume the repo reflects the live site, and do not
+    overwrite WordPress state to match the repo without approval.
 - **Remote access:** authenticated WordPress REST API using a dedicated
   Application Password.
 - **Environment:** `slsfc.org` is the only WordPress environment currently in
   use. There is no staging site, and the site is under construction.
+
+## Design system authority
+
+- **Visual-design authority:** the hosted **SLSFC Digital Design System** is
+  the source of truth for digital visual design (current release: v1.0). See
+  `brand/README.md`.
+- **This repo:** the version-controlled implementation target. `brand/`
+  holds a read-only snapshot of each approved release (`brand/design-system/`)
+  and the approved crest files (`brand/logos/`).
+- **Direction of change:** brand and design-system changes start in the
+  hosted system. After approval they are deliberately synchronized into
+  `brand/` as a release snapshot. Do not change design decisions by editing
+  the snapshot.
+- **No silent overrides:** implementation (CSS, Elementor globals, templates,
+  copy) must not redefine or override approved design-system decisions. If an
+  implementation need conflicts with the system, stop and raise it.
+- **Not brand authority:** WordPress/Elementor defaults, the factory Elementor
+  Kit, test or placeholder content, and legacy or exploratory artifacts.
+- **Open items stay open:** items in
+  `brand/design-system/v1.0/open-items.md` are resolved only in the hosted
+  system with real artwork or decisions; never recreate missing assets here.
+- The security rules, approval requirements and WordPress/Elementor write
+  restrictions below are unchanged and still apply.
 
 ## Security rules (non-negotiable)
 
@@ -59,7 +91,7 @@ Squirrel Football Club (SLSFC).
 | Path                   | Purpose                                                  |
 |------------------------|----------------------------------------------------------|
 | `docs/`                | Architecture notes, runbooks, decision records           |
-| `brand/`               | Logos, colors, typography, brand guidelines              |
+| `brand/`               | Approved crest files and design-system release snapshots |
 | `content/`             | Source copy in Markdown for site pages                   |
 | `wordpress/elementor/` | Exported Elementor templates and global kit (JSON)       |
 

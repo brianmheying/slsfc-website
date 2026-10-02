@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "elementor": {
+      "type": "http",
+      "url": "https://slsfc.org/wp-json/elementor/mcp",
+      "headersHelper": "/usr/bin/python3 scripts/elementor_mcp_headers.py"
+    }
+  }
+}

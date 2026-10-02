@@ -1,6 +1,20 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enabledMcpjsonServers": [
+    "elementor"
+  ],
   "permissions": {
+    "allow": [
+      "mcp__elementor__elementor-get-page-structure",
+      "mcp__elementor__elementor-get-default-styles",
+      "mcp__elementor__elementor-get-widget-schema",
+      "mcp__elementor__elementor-list-widget-schemas",
+      "mcp__elementor__elementor-list-assets",
+      "mcp__elementor__elementor-list-resources",
+      "mcp__elementor__elementor-read-resource",
+      "mcp__elementor__elementor-list-components",
+      "mcp__elementor__elementor-list-posts"
+    ],
     "deny": [
       "Read(./.env)",
       "Read(./.env.*)",
@@ -12,7 +26,20 @@
       "Bash(security dump-keychain:*)",
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
-      "Bash(git push --force-with-lease:*)"
+      "Bash(git push --force-with-lease:*)",
+      "Bash(python3 *elementor_mcp_headers*)",
+      "Bash(/usr/bin/python3 *elementor_mcp_headers*)",
+      "Bash(python *elementor_mcp_headers*)",
+      "Bash(env *elementor_mcp_headers*)",
+      "Bash(/usr/bin/env *elementor_mcp_headers*)",
+      "Bash(scripts/elementor_mcp_headers.py*)",
+      "Bash(./scripts/elementor_mcp_headers.py*)",
+      "mcp__elementor__elementor-publish-document",
+      "mcp__elementor__elementor-manage-default-styles",
+      "mcp__elementor__elementor-manage-component",
+      "mcp__elementor__elementor-manage-global-variable",
+      "mcp__elementor__elementor-manage-classes",
+      "mcp__elementor__elementor-reorder-classes"
     ],
     "ask": [
       "Bash(curl:*)",
@@ -24,7 +51,26 @@
       "Bash(git push:*)",
       "Bash(git reset --hard:*)",
       "Bash(gh pr create:*)",
-      "Bash(gh pr merge:*)"
+      "Bash(gh pr merge:*)",
+      "mcp__elementor__elementor-build-composition",
+      "mcp__elementor__elementor-manage-elements",
+      "mcp__elementor__elementor-update-page-settings",
+      "mcp__elementor__elementor-create-page",
+      "mcp__elementor__elementor-create-preview-link"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__elementor__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 \"${CLAUDE_PROJECT_DIR}/scripts/elementor_mcp_tool_guard.py\"",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }

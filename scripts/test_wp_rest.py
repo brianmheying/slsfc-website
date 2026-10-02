@@ -14,6 +14,7 @@ import sys
 import unittest
 import unittest.mock
 import urllib.error
+import urllib.parse
 import urllib.request
 
 sys.dont_write_bytecode = True  # Keep __pycache__ out of the working tree.
@@ -77,7 +78,17 @@ ALL_COMMANDS = [
     ["media"],
     ["media", "--media-type", "image"],
     ["media-item", "34"],
+    ["library-item", "7"],
+    ["library-item", "7", "--context", "edit", "--fields", "id,meta"],
+    ["globals"],
+    ["global-classes"],
+    ["variables"],
 ]
+
+ALLOWED_PREFIXES = (
+    "https://slsfc.org/wp-json/wp/v2/",
+    "https://slsfc.org/wp-json/elementor/v1/",
+)
 
 
 class RequestShapeTests(unittest.TestCase):
@@ -96,13 +107,19 @@ class RequestShapeTests(unittest.TestCase):
             opener = FakeOpener()
             run(argv, opener)
             url = opener.requests[0].full_url
-            self.assertTrue(url.startswith("https://slsfc.org/wp-json/wp/v2/"), url)
+            self.assertTrue(url.startswith(ALLOWED_PREFIXES), url)
 
     def test_expected_endpoints(self):
         cases = {
             ("me",): "https://slsfc.org/wp-json/wp/v2/users/me",
             ("page", "12"): "https://slsfc.org/wp-json/wp/v2/pages/12",
             ("media-item", "34"): "https://slsfc.org/wp-json/wp/v2/media/34",
+            ("library-item", "7"): "https://slsfc.org/wp-json/wp/v2/elementor_library/7",
+            ("library-item", "7", "--context", "edit"):
+                "https://slsfc.org/wp-json/wp/v2/elementor_library/7?context=edit",
+            ("globals",): "https://slsfc.org/wp-json/elementor/v1/globals",
+            ("global-classes",): "https://slsfc.org/wp-json/elementor/v1/global-classes?context=frontend",
+            ("variables",): "https://slsfc.org/wp-json/elementor/v1/variables/list",
         }
         for argv, expected in cases.items():
             opener = FakeOpener()
@@ -132,6 +149,70 @@ class RequestShapeTests(unittest.TestCase):
         with self.assertRaises(wp_rest.ApiError):
             wp_rest.build_url("@evil.example/x", {})
 
+    def test_build_url_rejects_non_allowlisted_routes(self):
+        blocked = [
+            # Other elementor/v1 routes, including sub-routes of allowed ones.
+            "/elementor/v1",
+            "/elementor/v1/globals/colors",
+            "/elementor/v1/globals/typography",
+            "/elementor/v1/globals/colors/primary",
+            "/elementor/v1/global-classes/usage",
+            "/elementor/v1/global-classes/post",
+            "/elementor/v1/variables",
+            "/elementor/v1/variables/create",
+            "/elementor/v1/variables/list/extra",
+            "/elementor/v1/settings/elementor_active_kit",
+            "/elementor/v1/default-styles",
+            "/elementor/v1/kit-elements-defaults",
+            "/elementor/v1/components",
+            "/elementor/v1/documents",
+            "/elementor/v1/cache",
+            "/elementor/v1/mcp-proxy",
+            "/elementor/v1/system-info",
+            "/elementor/v1/user-data/current-user",
+            # Other namespaces.
+            "/elementor-one/v1/plugins",
+            "/elementor-mcp-composer/v1.0.18/mcp-settings",
+            "/elementor-hello-elementor/v1/theme-settings",
+            "/wp-abilities/v1/abilities",
+            # wp/v2 routes that are not allowlisted.
+            "/wp/v2/elementor_library",
+            "/wp/v2/elementor_library/7/revisions",
+            "/wp/v2/elementor_library/0",
+            "/wp/v2/users",
+            "/wp/v2/users/2",
+            "/wp/v2/users/me/application-passwords",
+            "/wp/v2/settings",
+            "/wp/v2/plugins",
+            "/wp/v2/themes",
+            # Traversal and smuggling attempts.
+            "/elementor/v1/globals/../settings/x",
+            "/elementor/v1/globals?x=1",
+            "/elementor/v1/globals#x",
+            "/wp/v2/pages/7/../../../elementor/v1/cache",
+            "//evil.example/elementor/v1/globals",
+        ]
+        for path in blocked:
+            with self.assertRaises(wp_rest.ApiError, msg=path):
+                wp_rest.build_url(path, {})
+
+    def test_every_allowlisted_command_path_passes_the_allowlist(self):
+        parser = wp_rest.build_parser()
+        for argv in ALL_COMMANDS:
+            path, params, _ = wp_rest.plan_request(parser.parse_args(argv))
+            wp_rest.build_url(path, params)  # Must not raise.
+
+    def test_elementor_commands_send_only_fixed_query_parameters(self):
+        expected = {
+            ("globals",): "",
+            ("global-classes",): "context=frontend",
+            ("variables",): "",
+        }
+        for argv, query in expected.items():
+            opener = FakeOpener()
+            run(list(argv), opener)
+            self.assertEqual(urllib.parse.urlsplit(opener.requests[0].full_url).query, query, argv)
+
 
 class ArgumentTests(unittest.TestCase):
 
@@ -153,8 +234,23 @@ class ArgumentTests(unittest.TestCase):
             self.assertUsageError([command])
 
     def test_rejects_path_injection_in_ids(self):
-        for bad in ["12/../users", "../settings", "12?x=1", "-1", "0", "abc", "1.5"]:
-            self.assertUsageError(["page", bad])
+        for command in ["page", "media-item", "library-item"]:
+            for bad in ["12/../users", "../settings", "12?x=1", "-1", "0", "abc", "1.5", "7/revisions"]:
+                self.assertUsageError([command, bad])
+
+    def test_elementor_commands_take_no_caller_input(self):
+        for command in ["globals", "global-classes", "variables"]:
+            for extra in (["--context", "preview"], ["--fields", "id"], ["--path", "/x"],
+                          ["--query", "a=b"], ["--header", "X: y"], ["extra-arg"]):
+                self.assertUsageError([command] + extra)
+
+    def test_library_item_requires_an_id(self):
+        self.assertUsageError(["library-item"])
+
+    def test_rejects_other_elementor_command_names(self):
+        for command in ["kit", "default-styles", "kit-elements-defaults", "components",
+                        "documents", "revisions", "settings", "mcp-proxy", "cache"]:
+            self.assertUsageError([command])
 
     def test_rejects_invalid_status_and_per_page(self):
         self.assertUsageError(["pages", "--status", "publish,bogus"])

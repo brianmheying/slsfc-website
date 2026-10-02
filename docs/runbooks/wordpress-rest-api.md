@@ -28,6 +28,10 @@ python3 scripts/wp_rest.py pages --status any --context edit   # include drafts,
 python3 scripts/wp_rest.py page 42 --context edit       # one page, all fields, raw content
 python3 scripts/wp_rest.py media --media-type image     # media library (compact fields)
 python3 scripts/wp_rest.py media-item 99                # one media item, all fields
+python3 scripts/wp_rest.py library-item 7 --context edit  # Elementor library item (Kit 7)
+python3 scripts/wp_rest.py globals                      # Elementor global colors and typography
+python3 scripts/wp_rest.py global-classes               # Elementor atomic global classes
+python3 scripts/wp_rest.py variables                    # Elementor atomic variables
 ```
 
 List commands accept `--search`, `--per-page` (1–100, default 100), `--page`,
@@ -66,8 +70,15 @@ allowlist:
 | `page ID`    | `/wp/v2/pages/ID`     |
 | `media`      | `/wp/v2/media`        |
 | `media-item ID` | `/wp/v2/media/ID`  |
+| `library-item ID` | `/wp/v2/elementor_library/ID` |
+| `globals`    | `/elementor/v1/globals` |
+| `global-classes` | `/elementor/v1/global-classes?context=frontend` |
+| `variables`  | `/elementor/v1/variables/list` |
 
-There is no option to change the HTTP method, send a request body, or
+`ALLOWED_PATHS` in the helper lists these routes as exact patterns, and
+every request path must fully match one of them. No other `elementor/v1`
+route, sub-route, or namespace can be reached. There is no option to change
+the HTTP method, send a request body or headers, add query parameters, or
 request an arbitrary path or host. Adding write support requires a code
 change, a review, and the per-action approval process in `CLAUDE.md`.
 
@@ -82,8 +93,8 @@ change, a review, and the per-action approval process in `CLAUDE.md`.
   memory. The header is attached with `add_unredirected_header`, so urllib
   never copies it onto a redirected request.
 - **Destination:** the base URL is hard-coded to `https://slsfc.org`, every
-  URL is checked to start with `https://slsfc.org/wp-json/wp/v2/`, and
-  IDs must be positive integers.
+  path must fully match an entry in `ALLOWED_PATHS`, and IDs must be
+  positive integers.
 - **Transport:** TLS certificate and hostname verification use Python's
   defaults and cannot be disabled. Plain HTTP is never used. Proxy
   environment variables are ignored. Every redirect is treated as an error

@@ -15,6 +15,10 @@ Usage:
     python3 scripts/wp_rest.py page ID [--context edit] [--fields F]
     python3 scripts/wp_rest.py media [--media-type image] [--search Q] [--per-page N] [--page N] [--fields F]
     python3 scripts/wp_rest.py media-item ID [--context edit] [--fields F]
+    python3 scripts/wp_rest.py library-item ID [--context edit] [--fields F]
+    python3 scripts/wp_rest.py globals
+    python3 scripts/wp_rest.py global-classes
+    python3 scripts/wp_rest.py variables
 
 Exit codes: 0 success, 1 API/network error, 2 usage error, 3 credential error.
 
@@ -24,6 +28,7 @@ See docs/runbooks/wordpress-rest-api.md.
 import argparse
 import base64
 import json
+import re
 import ssl
 import subprocess
 import sys
@@ -35,7 +40,7 @@ import urllib.request
 
 HOST = "slsfc.org"
 BASE_URL = "https://" + HOST
-API_ROOT = "/wp-json/wp/v2"
+API_PREFIX = "/wp-json"
 KEYCHAIN_SERVICE = "slsfc-wordpress-api"
 KEYCHAIN_ACCOUNT = "claude-api"  # Also the WordPress username.
 SECURITY_BIN = "/usr/bin/security"
@@ -51,6 +56,20 @@ DEFAULT_FIELDS = {
 PAGE_STATUSES = {"publish", "future", "draft", "pending", "private", "trash", "any"}
 MEDIA_TYPES = ("image", "video", "text", "application", "audio")
 CONTEXTS = ("view", "edit", "embed")
+
+# Every path the helper may request, relative to API_PREFIX. build_url()
+# refuses anything that does not fully match one of these patterns.
+ALLOWED_PATHS = (
+    r"/wp/v2/users/me",
+    r"/wp/v2/pages",
+    r"/wp/v2/pages/[1-9][0-9]*",
+    r"/wp/v2/media",
+    r"/wp/v2/media/[1-9][0-9]*",
+    r"/wp/v2/elementor_library/[1-9][0-9]*",
+    r"/elementor/v1/globals",
+    r"/elementor/v1/global-classes",
+    r"/elementor/v1/variables/list",
+)
 
 
 # --- Errors ----------------------------------------------------------------
@@ -141,12 +160,12 @@ def build_opener():
 
 
 def build_url(path, params):
-    url = BASE_URL + API_ROOT + path
+    if not any(re.fullmatch(pattern, path) for pattern in ALLOWED_PATHS):
+        raise ApiError("refusing to request a path outside the allowlist: " + path)
+    url = BASE_URL + API_PREFIX + path
     query = urllib.parse.urlencode({k: v for k, v in params.items() if v is not None})
     if query:
         url += "?" + query
-    if not url.startswith(BASE_URL + API_ROOT + "/"):
-        raise ApiError("refusing to request a URL outside " + BASE_URL + API_ROOT)
     return url
 
 
@@ -196,31 +215,40 @@ def fetch(opener, url, auth_header):
 
 def plan_request(args):
     """Map parsed arguments to (path, params, is_list). Only GET paths exist here."""
-    fields = None if args.fields == "all" else args.fields
+    requested_fields = getattr(args, "fields", None)
+    fields = None if requested_fields == "all" else requested_fields
     if args.command == "me":
-        return "/users/me", {"context": args.context}, False
+        return "/wp/v2/users/me", {"context": args.context}, False
     if args.command == "pages":
-        return "/pages", {
+        return "/wp/v2/pages", {
             "status": args.status,
             "search": args.search,
             "per_page": args.per_page,
             "page": args.page,
             "context": args.context,
-            "_fields": fields if args.fields is not None else DEFAULT_FIELDS["pages"],
+            "_fields": fields if requested_fields is not None else DEFAULT_FIELDS["pages"],
         }, True
     if args.command == "page":
-        return "/pages/{}".format(args.id), {"context": args.context, "_fields": fields}, False
+        return "/wp/v2/pages/{}".format(args.id), {"context": args.context, "_fields": fields}, False
     if args.command == "media":
-        return "/media", {
+        return "/wp/v2/media", {
             "media_type": args.media_type,
             "search": args.search,
             "per_page": args.per_page,
             "page": args.page,
             "context": args.context,
-            "_fields": fields if args.fields is not None else DEFAULT_FIELDS["media"],
+            "_fields": fields if requested_fields is not None else DEFAULT_FIELDS["media"],
         }, True
     if args.command == "media-item":
-        return "/media/{}".format(args.id), {"context": args.context, "_fields": fields}, False
+        return "/wp/v2/media/{}".format(args.id), {"context": args.context, "_fields": fields}, False
+    if args.command == "library-item":
+        return "/wp/v2/elementor_library/{}".format(args.id), {"context": args.context, "_fields": fields}, False
+    if args.command == "globals":
+        return "/elementor/v1/globals", {}, False
+    if args.command == "global-classes":
+        return "/elementor/v1/global-classes", {"context": "frontend"}, False
+    if args.command == "variables":
+        return "/elementor/v1/variables/list", {}, False
     raise HelperError("unknown command")
 
 
@@ -283,6 +311,14 @@ def build_parser():
     item.add_argument("id", type=_positive_int)
     add_common(item, "Comma-separated fields. Default: all.")
 
+    library_item = sub.add_parser("library-item", help="a single Elementor library item (e.g. the Kit) by ID")
+    library_item.add_argument("id", type=_positive_int)
+    add_common(library_item, "Comma-separated fields. Default: all.")
+
+    sub.add_parser("globals", help="Elementor global colors and typography")
+    sub.add_parser("global-classes", help="Elementor atomic global classes (frontend context)")
+    sub.add_parser("variables", help="Elementor atomic global variables")
+
     return parser
 
 
@@ -290,8 +326,6 @@ def main(argv=None, password_source=get_password, opener=None, stdout=None, stde
     stdout = stdout or sys.stdout
     stderr = stderr or sys.stderr
     args = build_parser().parse_args(argv)  # Usage errors exit with code 2.
-    if not hasattr(args, "fields"):
-        args.fields = None
 
     redact = Redactor()
     try:

@@ -1,0 +1,38 @@
+# --- Secrets (never commit) ---------------------------------------------
+# WordPress credentials live in macOS Keychain. These patterns are a
+# safety net in case a secret ever lands on disk by mistake.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+auth.json
+wp-config.php
+
+# --- Database dumps and site backups ------------------------------------
+*.sql
+*.sql.gz
+*.wpress
+*.tar
+*.tar.gz
+*.tgz
+backups/
+
+# --- Dependencies and build output --------------------------------------
+node_modules/
+vendor/
+dist/
+build/
+
+# --- OS and editor files ------------------------------------------------
+.DS_Store
+._*
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+
+# --- Claude Code local (per-machine) settings ---------------------------
+.claude/settings.local.json
